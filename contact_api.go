@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"gopkg.in/intercom/intercom-go.v2/interfaces"
+	"github.com/qasir-id/intercom-go/interfaces"
 )
 
 // ContactRepository defines the interface for working with Contacts through the API.
@@ -66,6 +66,7 @@ func (api ContactAPI) create(contact *Contact) (Contact, error) {
 
 func (api ContactAPI) update(contact *Contact) (Contact, error) {
 	requestContact := api.buildRequestContact(contact)
+
 	return unmarshalToContact(api.httpClient.Put(fmt.Sprintf("/contacts/%s", contact.ID), &requestContact))
 }
 
