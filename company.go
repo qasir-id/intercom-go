@@ -28,6 +28,9 @@ type Company struct {
 	SessionCount     int64                  `json:"session_count,omitempty"`
 	MonthlySpend     int64                  `json:"monthly_spend,omitempty"`
 	UserCount        int64                  `json:"user_count,omitempty"`
+	Size             int64                  `json:"size,omitempty"`
+	Website          string                 `json:"website,omitempty"`
+	Industry         string                 `json:"industry,omitempty"`
 	Tags             *TagList               `json:"tags,omitempty"`
 	Segments         *SegmentList           `json:"segments,omitempty"`
 	Plan             *Plan                  `json:"plan,omitempty"`
