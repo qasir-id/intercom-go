@@ -17,6 +17,7 @@ type ContactRepository interface {
 	update(*Contact) (Contact, error)
 	convert(*Contact, *User) (User, error)
 	delete(id string) (Contact, error)
+	search(UserIdentifiers) (ContactList, error)
 }
 
 // ContactAPI implements ContactRepository
@@ -49,14 +50,14 @@ func (api ContactAPI) list(params contactListParams) (ContactList, error) {
 }
 
 func (api ContactAPI) scroll(scrollParam string) (ContactList, error) {
-       contactList := ContactList{}
-       params := scrollParams{ ScrollParam: scrollParam }
-       data, err := api.httpClient.Get("/contacts/scroll", params)
-       if err != nil {
-               return contactList, err
-       }
-       err = json.Unmarshal(data, &contactList)
-       return contactList, err
+	contactList := ContactList{}
+	params := scrollParams{ScrollParam: scrollParam}
+	data, err := api.httpClient.Get("/contacts/scroll", params)
+	if err != nil {
+		return contactList, err
+	}
+	err = json.Unmarshal(data, &contactList)
+	return contactList, err
 }
 
 func (api ContactAPI) create(contact *Contact) (Contact, error) {
@@ -90,6 +91,27 @@ func (api ContactAPI) delete(id string) (Contact, error) {
 	return contact, err
 }
 
+func (api ContactAPI) search(params UserIdentifiers) (ContactList, error) {
+	var query = SearchParam{}
+	contactList := ContactList{}
+	switch {
+	case params.ID != "":
+		query = NewSearch("id", "=", params.ID)
+	case params.UserID != "":
+		query = NewSearch("external_id", "=", params.UserID)
+	default:
+		return contactList, errors.New("Missing Contact Identifier")
+	}
+
+	data, err := api.httpClient.Post("/contacts/search", query)
+	if err != nil {
+		return contactList, err
+	}
+	err = json.Unmarshal(data, &contactList)
+	return contactList, err
+
+}
+
 type convertRequest struct {
 	User    requestUser `json:"user"`
 	Contact requestUser `json:"contact"`
@@ -109,7 +131,7 @@ func (api ContactAPI) buildRequestContact(contact *Contact) requestUser {
 		ID:                     contact.ID,
 		Email:                  contact.Email,
 		Phone:                  contact.Phone,
-		UserID:                 contact.UserID,
+		UserID:                 contact.ExternalID,
 		Name:                   contact.Name,
 		LastRequestAt:          contact.LastRequestAt,
 		LastSeenIP:             contact.LastSeenIP,

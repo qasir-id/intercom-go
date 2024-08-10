@@ -9,9 +9,10 @@ type ContactService struct {
 
 // ContactList holds a list of Contacts and paging information
 type ContactList struct {
-	Pages    PageParams
-	Contacts []Contact
-	ScrollParam string `json:"scroll_param,omitempty"`
+	TypeList    string     `json:"type"`
+	Pages       PageParams `json:"pages"`
+	Contacts    []Contact  `json:"data"`
+	ScrollParam string     `json:"scroll_param,omitempty"`
 }
 
 // Contact represents a Contact within Intercom.
@@ -21,9 +22,10 @@ type Contact struct {
 	ID                     string                 `json:"id,omitempty"`
 	Email                  string                 `json:"email,omitempty"`
 	Phone                  string                 `json:"phone,omitempty"`
-	UserID                 string                 `json:"user_id,omitempty"`
+	ExternalID             string                 `json:"external_id,omitempty"`
 	Name                   string                 `json:"name,omitempty"`
-	Avatar                 *UserAvatar            `json:"avatar,omitempty"`
+	Avatar                 string                 `json:"avatar,omitempty"`
+	OwnerID                *int64                 `json:"owner_id,omitempty"`
 	LocationData           *LocationData          `json:"location_data,omitempty"`
 	LastRequestAt          int64                  `json:"last_request_at,omitempty"`
 	CreatedAt              int64                  `json:"created_at,omitempty"`
@@ -33,8 +35,9 @@ type Contact struct {
 	SocialProfiles         *SocialProfileList     `json:"social_profiles,omitempty"`
 	UnsubscribedFromEmails *bool                  `json:"unsubscribed_from_emails,omitempty"`
 	UserAgentData          string                 `json:"user_agent_data,omitempty"`
-	Tags                   *TagList               `json:"tags,omitempty"`
+	Tags                   *CommonObjectList      `json:"tags,omitempty"`
 	Segments               *SegmentList           `json:"segments,omitempty"`
+	Notes                  *CommonObjectList      `json:"notes,omitempty"`
 	Companies              *CompanyList           `json:"companies,omitempty"`
 	CustomAttributes       map[string]interface{} `json:"custom_attributes,omitempty"`
 	UpdateLastRequestAt    *bool                  `json:"update_last_request_at,omitempty"`
@@ -54,8 +57,8 @@ func (c *ContactService) FindByID(id string) (Contact, error) {
 }
 
 // FindByUserID looks up a Contact by their UserID (automatically generated server side).
-func (c *ContactService) FindByUserID(userID string) (Contact, error) {
-	return c.findWithIdentifiers(UserIdentifiers{UserID: userID})
+func (c *ContactService) FindByUserID(userID string) (ContactList, error) {
+	return c.Repository.search(UserIdentifiers{UserID: userID})
 }
 
 func (c *ContactService) findWithIdentifiers(identifiers UserIdentifiers) (Contact, error) {
@@ -69,7 +72,7 @@ func (c *ContactService) List(params PageParams) (ContactList, error) {
 
 // List all Contacts for App via Scroll API
 func (c *ContactService) Scroll(scrollParam string) (ContactList, error) {
-       return c.Repository.scroll(scrollParam)
+	return c.Repository.scroll(scrollParam)
 }
 
 // ListByEmail looks up a list of Contacts by their Email.
@@ -113,10 +116,10 @@ func (c Contact) MessageAddress() MessageAddress {
 		Type:   "contact",
 		ID:     c.ID,
 		Email:  c.Email,
-		UserID: c.UserID,
+		UserID: c.ExternalID,
 	}
 }
 
 func (c Contact) String() string {
-	return fmt.Sprintf("[intercom] contact { id: %s name: %s, user_id: %s, email: %s }", c.ID, c.Name, c.UserID, c.Email)
+	return fmt.Sprintf("[intercom] contact { id: %s name: %s, user_id: %s, email: %s }", c.ID, c.Name, c.ExternalID, c.Email)
 }

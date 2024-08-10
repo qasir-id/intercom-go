@@ -9,8 +9,8 @@ type UserService struct {
 
 // UserList holds a list of Users and paging information
 type UserList struct {
-	Pages PageParams
-	Users []User
+	Pages       PageParams
+	Users       []User
 	ScrollParam string `json:"scroll_param,omitempty"`
 }
 
@@ -75,13 +75,13 @@ type SocialProfile struct {
 // UserIdentifiers are used to identify Users in Intercom.
 type UserIdentifiers struct {
 	ID     string `url:"-"`
-	UserID string `url:"user_id,omitempty"`
+	UserID string `url:"external_id,omitempty"`
 	Email  string `url:"email,omitempty"`
 }
 
 // UserAvatar represents an avatar for a User.
 type UserAvatar struct {
-	Type string `json:"type,omitempty"`
+	Type     string `json:"type,omitempty"`
 	ImageURL string `json:"image_url,omitempty"`
 }
 
@@ -92,7 +92,28 @@ type userListParams struct {
 }
 
 type scrollParams struct {
-	ScrollParam  string `url:"scroll_param,omitempty"`
+	ScrollParam string `url:"scroll_param,omitempty"`
+}
+
+// QueryFilter is used to search for certain objects
+type QueryFilter struct {
+	Field    string `json:"field"`
+	Operator string `json:"operator"`
+	Value    string `json:"value"`
+}
+
+type SearchParam struct {
+	Query QueryFilter `json:"query"`
+}
+
+func NewSearch(f, o, v string) SearchParam {
+	return SearchParam{
+		Query: QueryFilter{
+			Field:    f,
+			Operator: o,
+			Value:    v,
+		},
+	}
 }
 
 // FindByID looks up a User by their Intercom ID.
@@ -121,7 +142,7 @@ func (u *UserService) List(params PageParams) (UserList, error) {
 
 // List all Users for App via Scroll API
 func (u *UserService) Scroll(scrollParam string) (UserList, error) {
-       return u.Repository.scroll(scrollParam)
+	return u.Repository.scroll(scrollParam)
 }
 
 // List Users by Segment.
